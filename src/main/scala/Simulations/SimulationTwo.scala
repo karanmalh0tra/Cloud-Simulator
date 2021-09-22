@@ -1,12 +1,14 @@
 package Simulations
 
 import HelperUtils.{CreateLogger, ObtainConfigReference}
-import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicyRoundRobin
+import org.cloudbus.cloudsim.allocationpolicies.{VmAllocationPolicyRoundRobin, VmAllocationPolicySimple}
 import org.cloudbus.cloudsim.brokers.DatacenterBrokerSimple
 import org.cloudbus.cloudsim.cloudlets.{Cloudlet, CloudletSimple}
 import org.cloudbus.cloudsim.core.CloudSim
 import org.cloudbus.cloudsim.datacenters.DatacenterSimple
 import org.cloudbus.cloudsim.hosts.{Host, HostSimple}
+import org.cloudbus.cloudsim.network.topologies.BriteNetworkTopology
+import org.cloudbus.cloudsim.network.topologies.NetworkTopology
 import org.cloudbus.cloudsim.resources.{Pe, PeSimple}
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelDynamic
 import org.cloudbus.cloudsim.vms.{Vm, VmSimple}
@@ -16,7 +18,7 @@ import collection.JavaConverters.*
 import scala.collection.mutable.ListBuffer
 import java.util
 
-class SimulationOne {
+class SimulationTwo {
   /*
   Fetch configs from resources and setup logger
   */
@@ -46,15 +48,18 @@ class SimulationOne {
 
   // ToDo: Costing inputs
 
-  // ToDo: Network Latency
+  // Done: Network Latency
+  val NETWORK_BW: Double = 5.0
   val NETWORK_LATENCY: Double = 5.0
 
   val simulation = new CloudSim();
   val hostList = createHostList(HOSTS)
   logger.info(s"Created hosts: $hostList")
 
-  val datacenter0 = new DatacenterSimple(simulation, hostList, new VmAllocationPolicyRoundRobin());
+  val datacenter0 = new DatacenterSimple(simulation, hostList, new VmAllocationPolicySimple());
   val broker0 = new DatacenterBrokerSimple(simulation);
+
+  configureNetwork()
 
   val vmList = createVmList(VMS)
 
@@ -72,6 +77,12 @@ class SimulationOne {
 
   val finishedCloudlets = broker0.getCloudletFinishedList();
   new CloudletsTableBuilder(finishedCloudlets).build();
+
+  def configureNetwork() = {
+    val networkTopology = new BriteNetworkTopology()
+    simulation.setNetworkTopology(networkTopology)
+    networkTopology.addLink(datacenter0,broker0,NETWORK_BW,NETWORK_LATENCY)
+  }
 
   def createHostList(HOSTS: Int) = {
     val hostlist = new util.ArrayList[Host]
@@ -116,9 +127,9 @@ class SimulationOne {
   }
 }
 
-object SimulationOne {
+object SimulationTwo {
 
   def main(args: Array[String]): Unit = {
-    new SimulationOne
+    new SimulationTwo
   }
 }
