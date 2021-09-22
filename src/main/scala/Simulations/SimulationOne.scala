@@ -17,23 +17,46 @@ import scala.collection.mutable.ListBuffer
 import java.util
 
 class SimulationOne {
-
+  /*
+  Fetch configs from resources and setup logger
+  */
   val config = fetchConfig()
   val logger = CreateLogger(classOf[SimulationOne])
 
-  val simulation = new CloudSim();
+  val HOSTS: Int = config.getInt(("SimulationOne.host.count"))
+  val HOSTS_RAM: Int = config.getInt("SimulationOne.host.RAMInMBs")
+  val HOSTS_BANDWIDTH: Long = config.getLong("SimulationOne.host.BandwidthInMBps")
+  val HOSTS_STORAGE: Long = config.getLong("SimulationOne.host.StorageInMBs")
+  val HOSTS_PES: Int = config.getInt("SimulationOne.host.PEs")
+  val HOSTS_MIPS_CAPACITY: Long = config.getLong("SimulationOne.host.mipsCapacity")
 
-  val hostList = createHostList(config.getInt(("SimulationOne.host.count")))
+  val VMS: Int = config.getInt("SimulationOne.vm.count")
+  val VMS_MIPS_CAPACITY: Long = config.getLong("SimulationOne.vm.mipsCapacity")
+  val VMS_PES: Int = config.getInt("SimulationOne.vm.PEs")
+  val VMS_RAM: Long = config.getLong("SimulationOne.vm.RAMInMBs")
+  val VMS_BANDWIDTH: Long = config.getLong("SimulationOne.vm.BandwidthInMBps")
+  val VMS_STORAGE: Long = config.getLong("SimulationOne.vm.StorageInMBs")
+
+  val CLOUDLETS: Int = config.getInt("SimulationOne.cloudlet.count")
+  val CLOUDLETS_LENGTH: Long = config.getLong("SimulationOne.cloudlet.length")
+  val CLOUDLETS_PES: Int = config.getInt("SimulationOne.cloudlet.PEs")
+  val CLOUDLETS_SIZE: Long = config.getLong("SimulationOne.cloudlet.size")
+
+  val UTILIZATION_RATIO: Double = config.getDouble("SimulationOne.utilizationRatio")
+
+
+  val simulation = new CloudSim();
+  val hostList = createHostList(HOSTS)
   logger.info(s"Created hosts: $hostList")
 
   val datacenter0 = new DatacenterSimple(simulation, hostList, new VmAllocationPolicyRoundRobin());
   val broker0 = new DatacenterBrokerSimple(simulation);
 
-  val vmList = createVmList(config.getInt("SimulationOne.vm.count"))
+  val vmList = createVmList(VMS)
 
   logger.info(s"Create virtual machine: $vmList")
 
-  val cloudletList = createCloudlet(config.getInt("SimulationOne.cloudlet.count"))
+  val cloudletList = createCloudlet(CLOUDLETS)
 
   logger.info(s"Create a list of cloudlets: $cloudletList")
 
@@ -46,34 +69,32 @@ class SimulationOne {
   val finishedCloudlets = broker0.getCloudletFinishedList();
   new CloudletsTableBuilder(finishedCloudlets).build();
 
-  def createHostList(hostCount: Int) = {
-//    val hostPesList = createHostPesList(config.getInt("SimulationOne.host.PEs"))
-//    logger.info(s"Created one processing element: hostPes")
+  def createHostList(HOSTS: Int) = {
     val hostlist = new util.ArrayList[Host]
-    (1 to hostCount).map(hostPesList => hostlist.add(new HostSimple(config.getInt("SimulationOne.host.RAMInMBs"),
-        config.getLong("SimulationOne.host.BandwidthInMBps"),
-        config.getLong("SimulationOne.host.StorageInMBs"), createHostPesList(config.getInt("SimulationOne.host.PEs")), false)
+    (1 to HOSTS).map(hostPesList => hostlist.add(new HostSimple(HOSTS_RAM,
+      HOSTS_BANDWIDTH,
+      HOSTS_STORAGE, createHostPesList(HOSTS_PES), false)
     ))
     hostlist
   }
 
   def createVmList(VmCount: Int) = {
     val vmlist = new util.ArrayList[Vm]
-    (1 to VmCount).map(_ => vmlist.add(new VmSimple(config.getLong("SimulationOne.vm.mipsCapacity"), config.getLong("SimulationOne.vm.PEs"))
-      .setRam(config.getLong("SimulationOne.vm.RAMInMBs"))
-      .setBw(config.getLong("SimulationOne.vm.BandwidthInMBps"))
-      .setSize(config.getLong("SimulationOne.vm.StorageInMBs"))))
+    (1 to VmCount).map(_ => vmlist.add(new VmSimple(VMS_MIPS_CAPACITY, VMS_PES)
+      .setRam(VMS_RAM)
+      .setBw(VMS_BANDWIDTH)
+      .setSize(VMS_STORAGE)))
     vmlist
 
   }
 
-  def createCloudlet(cloudletCount: Int) = {
-    val utilizationModel = new UtilizationModelDynamic(config.getDouble("SimulationOne.utilizationRatio"))
+  def createCloudlet(CLOUDLETS: Int) = {
+    val utilizationModel = new UtilizationModelDynamic(UTILIZATION_RATIO)
     val cloudlets = new util.ArrayList[Cloudlet]
-    (1 to cloudletCount).map(_ => cloudlets.add(new CloudletSimple(config.getLong("SimulationOne.cloudlet.length"),
-      config.getInt("SimulationOne.cloudlet.PEs"),
+    (1 to CLOUDLETS).map(_ => cloudlets.add(new CloudletSimple(CLOUDLETS_LENGTH,
+      CLOUDLETS_PES,
       utilizationModel
-    ).setSizes(config.getLong("SimulationOne.cloudlet.size"))))
+    ).setSizes(CLOUDLETS_SIZE)))
     cloudlets
   }
 
@@ -84,9 +105,9 @@ class SimulationOne {
     }
   }
 
-  def createHostPesList(pesCount: Int) = {
+  def createHostPesList(HOSTS_PES: Int) = {
     val pesList = new util.ArrayList[Pe]
-    (1 to pesCount).map(_ => pesList.add(new PeSimple(config.getLong("SimulationOne.host.mipsCapacity"))))
+    (1 to HOSTS_PES).map(_ => pesList.add(new PeSimple(HOSTS_MIPS_CAPACITY)))
     pesList
   }
 }
