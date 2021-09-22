@@ -23,9 +23,6 @@ class SimulationOne {
 
   val simulation = new CloudSim();
 
-  val hostPesList = createHostPesList(config.getInt("SimulationOne.host.PEs"))
-  logger.info(s"Created one processing element: hostPes")
-
   val hostList = createHostList(config.getInt(("SimulationOne.host.count")))
   logger.info(s"Created hosts: $hostList")
 
@@ -50,10 +47,12 @@ class SimulationOne {
   new CloudletsTableBuilder(finishedCloudlets).build();
 
   def createHostList(hostCount: Int) = {
+//    val hostPesList = createHostPesList(config.getInt("SimulationOne.host.PEs"))
+//    logger.info(s"Created one processing element: hostPes")
     val hostlist = new util.ArrayList[Host]
-    (1 to hostCount).map(_ => hostlist.add(new HostSimple(config.getInt("SimulationOne.host.RAMInMBs"),
+    (1 to hostCount).map(hostPesList => hostlist.add(new HostSimple(config.getInt("SimulationOne.host.RAMInMBs"),
         config.getLong("SimulationOne.host.BandwidthInMBps"),
-        config.getLong("SimulationOne.host.StorageInMBs"), hostPesList)
+        config.getLong("SimulationOne.host.StorageInMBs"), createHostPesList(config.getInt("SimulationOne.host.PEs")), false)
     ))
     hostlist
   }
