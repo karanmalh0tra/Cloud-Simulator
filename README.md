@@ -12,7 +12,7 @@ Name: Karan Malhotra
 ### Development Environment
 + Windows 10
 + Java 11.0.11
-+ Scala 2.12.14
++ Scala 3.0.2
 + SBT Script Version 1.5.5
 + IntelliJ IDEA Ultimate
 
