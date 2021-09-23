@@ -6,7 +6,7 @@ import org.cloudbus.cloudsim.core.CloudSim
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import org.junit.{Assert, Test}
-import org.junit.Assert.{assertEquals, assertNotNull}
+import org.junit.Assert.{assertEquals, assertNotNull, assertTrue}
 
 
 class CloudSimulationTest {
@@ -32,6 +32,12 @@ class CloudSimulationTest {
   @Test
   def testCloudletsCount = {
     assertEquals(cloudSimulator.cloudletList.size(), config.getInt("SimulationOne.cloudlet.count"))
+  }
+
+  @Test
+  def testHostAndVMConfig = {
+    assertTrue(config.getInt("SimulationOne.host.count")*config.getInt("SimulationOne.host.RAMInMBs")>=
+      config.getInt("SimulationOne.vm.count")*config.getInt("SimulationOne.vm.RAMInMBs"))
   }
 
   // @Test
