@@ -1,13 +1,16 @@
 package Simulations
 
 import HelperUtils.{CreateLogger, ObtainConfigReference}
-import org.cloudbus.cloudsim.allocationpolicies.VmAllocationPolicyRoundRobin
+import org.cloudbus.cloudsim.allocationpolicies.{VmAllocationPolicyAbstract, VmAllocationPolicyBestFit, VmAllocationPolicyFirstFit, VmAllocationPolicyRoundRobin, VmAllocationPolicySimple}
 import org.cloudbus.cloudsim.brokers.DatacenterBrokerSimple
 import org.cloudbus.cloudsim.cloudlets.{Cloudlet, CloudletSimple}
 import org.cloudbus.cloudsim.core.CloudSim
 import org.cloudbus.cloudsim.datacenters.DatacenterSimple
 import org.cloudbus.cloudsim.hosts.{Host, HostSimple}
+import org.cloudbus.cloudsim.network.topologies.BriteNetworkTopology
 import org.cloudbus.cloudsim.resources.{Pe, PeSimple}
+import org.cloudbus.cloudsim.schedulers.cloudlet.{CloudletSchedulerAbstract, CloudletSchedulerCompletelyFair, CloudletSchedulerSpaceShared, CloudletSchedulerTimeShared}
+import org.cloudbus.cloudsim.schedulers.vm.{VmSchedulerAbstract, VmSchedulerSpaceShared, VmSchedulerTimeShared}
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelDynamic
 import org.cloudbus.cloudsim.vms.{Vm, VmSimple}
 import org.cloudsimplus.builders.tables.CloudletsTableBuilder
@@ -36,25 +39,32 @@ class SimulationOne {
   val VMS_RAM: Long = config.getLong("SimulationOne.vm.RAMInMBs")
   val VMS_BANDWIDTH: Long = config.getLong("SimulationOne.vm.BandwidthInMBps")
   val VMS_STORAGE: Long = config.getLong("SimulationOne.vm.StorageInMBs")
+  val VM_ALLOCATION_POLICY: String = config.getString("SimulationOne.VmAllocationPolicy")
+  val VM_SCHEDULER_POLICY: String = config.getString("SimulationOne.vm.scheduler")
 
   val CLOUDLETS: Int = config.getInt("SimulationOne.cloudlet.count")
   val CLOUDLETS_LENGTH: Long = config.getLong("SimulationOne.cloudlet.length")
   val CLOUDLETS_PES: Int = config.getInt("SimulationOne.cloudlet.PEs")
   val CLOUDLETS_SIZE: Long = config.getLong("SimulationOne.cloudlet.size")
+//  val CLOUDLETS_ALLOCATION_POLICY: String = config.getString("SimulationOne.CloudletAllocationPolicy")
+  val CLOUDLETS_SCHEDULER_POLICY: String = config.getString("SimulationOne.cloudlet.scheduler")
 
   val UTILIZATION_RATIO: Double = config.getDouble("SimulationOne.utilizationRatio")
 
   // ToDo: Costing inputs
 
-  // ToDo: Network Latency
+  // Done: Network Latency
+  val NETWORK_BW: Double = 5.0
   val NETWORK_LATENCY: Double = 5.0
 
   val simulation = new CloudSim();
   val hostList = createHostList(HOSTS)
   logger.info(s"Created hosts: $hostList")
 
-  val datacenter0 = new DatacenterSimple(simulation, hostList, new VmAllocationPolicyRoundRobin());
+  val datacenter0 = new DatacenterSimple(simulation, hostList, fetchVmAllocationPolicy);
   val broker0 = new DatacenterBrokerSimple(simulation);
+
+  configureNetwork()
 
   val vmList = createVmList(VMS)
 
@@ -73,11 +83,18 @@ class SimulationOne {
   val finishedCloudlets = broker0.getCloudletFinishedList();
   new CloudletsTableBuilder(finishedCloudlets).build();
 
+  def configureNetwork() = {
+    val networkTopology = new BriteNetworkTopology()
+    simulation.setNetworkTopology(networkTopology)
+    networkTopology.addLink(datacenter0,broker0,NETWORK_BW,NETWORK_LATENCY)
+  }
+
   def createHostList(HOSTS: Int) = {
     val hostlist = new util.ArrayList[Host]
     (1 to HOSTS).map(hostPesList => hostlist.add(new HostSimple(HOSTS_RAM,
       HOSTS_BANDWIDTH,
       HOSTS_STORAGE, createHostPesList(HOSTS_PES), false)
+      .setVmScheduler(fetchVmSchedulerPolicy)
     ))
     hostlist
   }
@@ -87,9 +104,27 @@ class SimulationOne {
     (1 to VmCount).map(_ => vmlist.add(new VmSimple(VMS_MIPS_CAPACITY, VMS_PES)
       .setRam(VMS_RAM)
       .setBw(VMS_BANDWIDTH)
-      .setSize(VMS_STORAGE)))
+      .setSize(VMS_STORAGE)
+    .setCloudletScheduler(fetchCloudletSchedulerPolicy)
+    ))
     vmlist
+  }
 
+  def fetchVmAllocationPolicy: VmAllocationPolicyAbstract = {
+    VM_ALLOCATION_POLICY match {
+      case "BestFit" => new VmAllocationPolicyBestFit
+      case "FirstFit" => new VmAllocationPolicyFirstFit
+      case "RoundRobin" => new VmAllocationPolicyRoundRobin
+      case _ => new VmAllocationPolicySimple
+    }
+  }
+
+  def fetchVmSchedulerPolicy: VmSchedulerAbstract = {
+    VM_SCHEDULER_POLICY match {
+      case "TimeShared" => new VmSchedulerTimeShared
+      case "SpaceShared" => new VmSchedulerSpaceShared
+      case _ => new VmSchedulerTimeShared
+    }
   }
 
   def createCloudlet(CLOUDLETS: Int) = {
@@ -100,6 +135,15 @@ class SimulationOne {
       utilizationModel
     ).setSizes(CLOUDLETS_SIZE)))
     cloudlets
+  }
+
+  def fetchCloudletSchedulerPolicy: CloudletSchedulerAbstract = {
+    CLOUDLETS_SCHEDULER_POLICY match {
+      case "CompletelyFair" => new CloudletSchedulerCompletelyFair
+      case "TimeShared" => new CloudletSchedulerTimeShared
+      case "SpaceShared" => new CloudletSchedulerSpaceShared
+      case _ => new CloudletSchedulerTimeShared
+    }
   }
 
   def fetchConfig() = {
