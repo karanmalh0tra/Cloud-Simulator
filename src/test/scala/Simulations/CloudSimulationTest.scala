@@ -1,7 +1,6 @@
 package Simulations
 
 import HelperUtils.ObtainConfigReference
-import Simulations.BasicCloudSimPlusExample.config
 import com.typesafe.config.ConfigFactory
 import org.cloudbus.cloudsim.core.CloudSim
 import org.scalatest.flatspec.AnyFlatSpec
