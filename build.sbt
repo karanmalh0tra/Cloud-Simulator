@@ -1,4 +1,4 @@
-name := "CloudOrgSimulator"
+name := "Cloud-Simulator"
 
 version := "0.1"
 
@@ -23,5 +23,8 @@ libraryDependencies ++= Seq(
   "org.scalatest" %% "scalatest" % scalacticVersion % Test,
   "org.scalatest" %% "scalatest-featurespec" % scalacticVersion % Test,
   "com.typesafe" % "config" % typesafeConfigVersion,
-  "org.cloudsimplus" % "cloudsim-plus" % cloudSimPlusVersion
+  "org.cloudsimplus" % "cloudsim-plus" % cloudSimPlusVersion,
+  "org.scalatest" %% "scalatest" % "2.2.2" % Test,
+  "junit" % "junit" % "4.12",
+  "com.novocode" % "junit-interface" % "0.10" % Test
 )

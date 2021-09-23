@@ -1,6 +1,7 @@
 package Simulations
 
 import HelperUtils.{CreateLogger, ObtainConfigReference}
+import com.typesafe.config.ConfigFactory
 import org.cloudbus.cloudsim.allocationpolicies.{VmAllocationPolicyAbstract, VmAllocationPolicyBestFit, VmAllocationPolicyFirstFit, VmAllocationPolicyRoundRobin, VmAllocationPolicySimple}
 import org.cloudbus.cloudsim.brokers.DatacenterBrokerSimple
 import org.cloudbus.cloudsim.cloudlets.{Cloudlet, CloudletSimple}
@@ -24,6 +25,8 @@ class SimulationOne {
   Fetch configs from resources and setup logger
   */
   val config = fetchConfig()
+  val customer_config = ConfigFactory.load("cloud-customer")
+  val provider_config = ConfigFactory.load("cloud-provider")
   val logger = CreateLogger(classOf[SimulationOne])
 
   val HOSTS: Int = config.getInt(("SimulationOne.host.count"))
@@ -46,7 +49,6 @@ class SimulationOne {
   val CLOUDLETS_LENGTH: Long = config.getLong("SimulationOne.cloudlet.length")
   val CLOUDLETS_PES: Int = config.getInt("SimulationOne.cloudlet.PEs")
   val CLOUDLETS_SIZE: Long = config.getLong("SimulationOne.cloudlet.size")
-//  val CLOUDLETS_ALLOCATION_POLICY: String = config.getString("SimulationOne.CloudletAllocationPolicy")
   val CLOUDLETS_SCHEDULER_POLICY: String = config.getString("SimulationOne.cloudlet.scheduler")
 
   val UTILIZATION_RATIO: Double = config.getDouble("SimulationOne.utilizationRatio")
@@ -57,7 +59,7 @@ class SimulationOne {
   val NETWORK_BW: Double = 5.0
   val NETWORK_LATENCY: Double = 5.0
 
-  val simulation = new CloudSim();
+  val simulation = new CloudSim
   val hostList = createHostList(HOSTS)
   logger.info(s"Created hosts: $hostList")
 
