@@ -35,10 +35,10 @@ class SimulationOne {
   val HOSTS_BANDWIDTH: Long = config.getLong("SimulationOne.host.BandwidthInMBps")
   val HOSTS_STORAGE: Long = config.getLong("SimulationOne.host.StorageInMBs")
   val HOSTS_PES: Int = config.getInt("SimulationOne.host.PEs")
-  val HOSTS_MIPS_CAPACITY: Long = config.getLong("SimulationOne.host.mipsCapacity")
+  val HOSTS_MIPS_CAPACITY: Double = config.getDouble("SimulationOne.host.mipsCapacity")
 
   val VMS: Int = config.getInt("SimulationOne.vm.count")
-  val VMS_MIPS_CAPACITY: Long = config.getLong("SimulationOne.vm.mipsCapacity")
+  val VMS_MIPS_CAPACITY: Double = config.getDouble("SimulationOne.vm.mipsCapacity")
   val VMS_PES: Int = config.getInt("SimulationOne.vm.PEs")
   val VMS_RAM: Long = config.getLong("SimulationOne.vm.RAMInMBs")
   val VMS_BANDWIDTH: Long = config.getLong("SimulationOne.vm.BandwidthInMBps")
