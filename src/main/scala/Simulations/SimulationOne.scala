@@ -30,9 +30,8 @@ class SimulationOne {
   val provider_config = ConfigFactory.load("cloud-provider")
   val logger = CreateLogger(classOf[SimulationOne])
 
-  // Fetch Provider Configs for IaaS, SaaS and PaaS
-  // Fetch Provider Configs for IaaS, SaaS and PaaS
-  // Create 3 Datacenters
+  //Service Model
+  val SERVICE_MODEL: String = provider_config.getString("IaaS.type")
 
   // Hosts Config
   val HOSTS: Int = provider_config.getInt(("IaaS.host.count"))

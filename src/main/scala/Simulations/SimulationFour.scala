@@ -29,6 +29,9 @@ class SimulationFour {
   val provider_config = ConfigFactory.load("cloud-provider")
   val logger = CreateLogger(classOf[SimulationOne])
 
+  //Service Model
+  val SERVICE_MODEL: String = provider_config.getString("SaaS.type")
+
   // Hosts Config
   val HOSTS: Int = provider_config.getInt(("SaaS.host.count"))
   val HOSTS_RAM: Int = provider_config.getInt("SaaS.host.RAMInMBs")
@@ -100,7 +103,7 @@ class SimulationFour {
   simulation.start();
 
   // Print the output of the simulation
-  new CloudletsTableBuilder(broker0.getCloudletFinishedList).setTitle("FaaS").build()
+  new CloudletsTableBuilder(broker0.getCloudletFinishedList).setTitle("SaaS").build()
 
   // Print the costs of each VM and Cloudlets and also store the total cost for test case check
   val TotalCost: Double = CalculateAndPrintCost
@@ -185,59 +188,23 @@ class SimulationFour {
     pesList
   }
 
-  // Calculates the costs of Running the VM
+  // Prints the costs of the Software
   // Calculates the costs of Running the Cloudlets
-  // Prints in logs costs of each VM and Cloudlet
-  // Prints different costing like Execution costs, Memory Costs, Storage Costs and Bandwidth Costs
+  // Prints the total cost charged for using the Software
   // Returns the total costs
   def CalculateAndPrintCost: Double = {
     logger.info(s"-------------------------------------------")
-    // vars are confined to method scopes and are used to keep adding cost while iterating through the Vms
-    var VmProcessingCost: Double = 0.0
-    var VmMemoryCost: Double = 0.0
-    var VmStorageCost: Double = 0.0
-    var VmBwCost: Double = 0.0
-    var VmTotalCost: Double = 0.0
+    val SoftwareCost: Double = provider_config.getDouble("SaaS.CostOfSoftware")
 
-    // vars are confined to method scopes and are used to keep adding cost while iterating through the Cloudlets
-    val CloudletFinishedList = broker0.getCloudletFinishedList
-    var CloudletProcessingCost: Double = 0.0
-    var CloudletMemoryCost: Double = 0.0
-    var CloudletStorageCost: Double = 0.0
-    var CloudletBwCost: Double = 0.0
-    var CloudletTotalCost: Double = 0.0
-    broker0.getVmCreatedList.forEach {
-      Vm => {
-        val cost = new VmCost(Vm)
-        VmProcessingCost += cost.getProcessingCost
-        VmMemoryCost += cost.getMemoryCost
-        VmStorageCost += cost.getStorageCost
-        VmBwCost += cost.getBwCost
-        VmTotalCost += VmProcessingCost + VmMemoryCost + VmStorageCost + VmBwCost
-        logger.info(s"$Vm's costs ${cost.getProcessingCost} to process, ${cost.getMemoryCost} memory cost, ${cost.getStorageCost} storage cost and ${cost.getBwCost} bandwidth cost")
-      }
-    }
+    val CostPerCloudlet: Double = provider_config.getDouble("SaaS.CostPerCloudlet")
+    val NumberOfCloudlets = broker0.getCloudletFinishedList.size()
+    val CloudletTotalCost: Double = CostPerCloudlet * NumberOfCloudlets
 
-    broker0.getCloudletFinishedList.forEach {
-      (cloudlet: Cloudlet) => {
-        CloudletProcessingCost += (cloudlet.getActualCpuTime*cloudlet.getCostPerSec)
-        CloudletMemoryCost += (cloudlet.getFileSize*cloudlet.getCostPerSec*COST_PER_MEM)
-        CloudletStorageCost += (cloudlet.getActualCpuTime*cloudlet.getFileSize*COST_PER_STORAGE)
-        CloudletBwCost += (cloudlet.getActualCpuTime*cloudlet.getCostPerBw)
-        CloudletTotalCost += CloudletProcessingCost + CloudletMemoryCost + CloudletStorageCost + CloudletBwCost
-        logger.info(s"$cloudlet's processing cost is ${cloudlet.getActualCpuTime*cloudlet.getCostPerSec}" +
-          s" memory cost is ${cloudlet.getFileSize*cloudlet.getCostPerSec*COST_PER_MEM}" +
-          s" storage cost is ${cloudlet.getActualCpuTime*cloudlet.getFileSize*COST_PER_STORAGE}" +
-          s" bw cost is ${cloudlet.getActualCpuTime*cloudlet.getCostPerBw}")
-      }
-    }
-
-    logger.info(s"Total cost " + "$" + s"$VmTotalCost for ${broker0.getVmsNumber} VMs which includes " + "$" + s"$VmProcessingCost Processing Cost, " + "$" + s"$VmMemoryCost Memory Cost, " + "$" + s"$VmStorageCost Storage" +
-      s"Cost and " + "$" + s"$VmBwCost Bandwidth Cost")
-    logger.info(s"Total cost " + "$" + s"$CloudletTotalCost for ${broker0.getCloudletFinishedList.size()} Cloudlets which includes " + "$" + s"$CloudletProcessingCost Processing Cost, " + "$" + s"$CloudletMemoryCost Memory Cost, " + "$" + s"$CloudletStorageCost Storage" +
-      s"Cost and " + "$" + s"$CloudletBwCost Bandwidth Cost")
-    val TotalCost = VmTotalCost + CloudletTotalCost
-    logger.info(s"The total cost is $TotalCost")
+    logger.info(s"The cost of using the software is $SoftwareCost")
+    logger.info(s"The cost per cloudlet is $CostPerCloudlet and the number of cloudlets are $NumberOfCloudlets")
+    logger.info(s"The total cost of cloudlets execution is $CloudletTotalCost")
+    val TotalCost = SoftwareCost + CloudletTotalCost
+    logger.info(s"The total cost of using this Service Model is $TotalCost")
     TotalCost
 
   }

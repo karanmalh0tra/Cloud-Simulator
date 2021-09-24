@@ -29,6 +29,9 @@ class SimulationThree {
   val provider_config = ConfigFactory.load("cloud-provider")
   val logger = CreateLogger(classOf[SimulationOne])
 
+  //Service Model
+  val SERVICE_MODEL: String = provider_config.getString("FaaS.type")
+
   // Hosts Config
   val HOSTS: Int = provider_config.getInt(("FaaS.host.count"))
   val HOSTS_RAM: Int = provider_config.getInt("FaaS.host.RAMInMBs")
@@ -185,19 +188,15 @@ class SimulationThree {
     pesList
   }
 
-  // Calculates the costs of Running the VM
+  // Calculates the costs of using a FaaS Service
   // Calculates the costs of Running the Cloudlets
-  // Prints in logs costs of each VM and Cloudlet
+  // Prints in logs costs of each Cloudlet
   // Prints different costing like Execution costs, Memory Costs, Storage Costs and Bandwidth Costs
   // Returns the total costs
   def CalculateAndPrintCost: Double = {
     logger.info(s"-------------------------------------------")
-    // vars are confined to method scopes and are used to keep adding cost while iterating through the Vms
-    var VmProcessingCost: Double = 0.0
-    var VmMemoryCost: Double = 0.0
-    var VmStorageCost: Double = 0.0
-    var VmBwCost: Double = 0.0
-    var VmTotalCost: Double = 0.0
+    val FaaSCost: Double = provider_config.getDouble("FaaS.CostOfFaaS")
+
 
     // vars are confined to method scopes and are used to keep adding cost while iterating through the Cloudlets
     val CloudletFinishedList = broker0.getCloudletFinishedList
@@ -206,17 +205,6 @@ class SimulationThree {
     var CloudletStorageCost: Double = 0.0
     var CloudletBwCost: Double = 0.0
     var CloudletTotalCost: Double = 0.0
-    broker0.getVmCreatedList.forEach {
-      Vm => {
-        val cost = new VmCost(Vm)
-        VmProcessingCost += cost.getProcessingCost
-        VmMemoryCost += cost.getMemoryCost
-        VmStorageCost += cost.getStorageCost
-        VmBwCost += cost.getBwCost
-        VmTotalCost += VmProcessingCost + VmMemoryCost + VmStorageCost + VmBwCost
-        logger.info(s"$Vm's costs ${cost.getProcessingCost} to process, ${cost.getMemoryCost} memory cost, ${cost.getStorageCost} storage cost and ${cost.getBwCost} bandwidth cost")
-      }
-    }
 
     broker0.getCloudletFinishedList.forEach {
       (cloudlet: Cloudlet) => {
@@ -232,11 +220,10 @@ class SimulationThree {
       }
     }
 
-    logger.info(s"Total cost " + "$" + s"$VmTotalCost for ${broker0.getVmsNumber} VMs which includes " + "$" + s"$VmProcessingCost Processing Cost, " + "$" + s"$VmMemoryCost Memory Cost, " + "$" + s"$VmStorageCost Storage" +
-      s"Cost and " + "$" + s"$VmBwCost Bandwidth Cost")
+    logger.info(s"The cost of using FaaS is $FaaSCost")
     logger.info(s"Total cost " + "$" + s"$CloudletTotalCost for ${broker0.getCloudletFinishedList.size()} Cloudlets which includes " + "$" + s"$CloudletProcessingCost Processing Cost, " + "$" + s"$CloudletMemoryCost Memory Cost, " + "$" + s"$CloudletStorageCost Storage" +
       s"Cost and " + "$" + s"$CloudletBwCost Bandwidth Cost")
-    val TotalCost = VmTotalCost + CloudletTotalCost
+    val TotalCost = FaaSCost + CloudletTotalCost
     logger.info(s"The total cost is $TotalCost")
     TotalCost
 

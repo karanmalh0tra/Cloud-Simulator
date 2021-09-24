@@ -1,5 +1,5 @@
 import HelperUtils.{CreateLogger, ObtainConfigReference}
-import Simulations.{SimulationOne, SimulationTwo}
+import Simulations.{SimulationOne, SimulationTwo, SimulationThree, SimulationFour}
 import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 
@@ -14,10 +14,19 @@ object Simulation:
     logger.info("Starting with SimulationTwo")
     SimulationTwo()
     logger.info("Finished SimulationTwo simulation...")
+    logBetweenSimulations()
+    logger.info("Starting with SimulationThree")
+    SimulationThree()
+    logger.info("Finished SimulationThree simulation...")
+    logBetweenSimulations()
+    logger.info("Starting with SimulationFour")
+    SimulationFour()
+    logger.info("Finished SimulationFour simulation...")
+
 
   def logBetweenSimulations() = {
     logger.info("-"*50)
-    logger.info("Logs between two simulation")
+    logger.info("Logs between simulations")
     logger.info("-"*50)
   }
 

@@ -12,7 +12,7 @@ import org.junit.Assert.{assertEquals, assertNotNull, assertTrue}
 class CloudSimulationTest {
 
   val config = ConfigFactory.load("application.conf")
-  val cloudSimulator = new SimulationOne
+  val cloudSimulator = SimulationOne()
 
   @Test
   def testCheckConfig = {
