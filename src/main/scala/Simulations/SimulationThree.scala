@@ -9,67 +9,62 @@ import org.cloudbus.cloudsim.core.CloudSim
 import org.cloudbus.cloudsim.datacenters.DatacenterSimple
 import org.cloudbus.cloudsim.hosts.{Host, HostSimple}
 import org.cloudbus.cloudsim.network.topologies.BriteNetworkTopology
+import org.cloudbus.cloudsim.network.topologies.NetworkTopology
 import org.cloudbus.cloudsim.resources.{Pe, PeSimple}
 import org.cloudbus.cloudsim.schedulers.cloudlet.{CloudletSchedulerAbstract, CloudletSchedulerCompletelyFair, CloudletSchedulerSpaceShared, CloudletSchedulerTimeShared}
 import org.cloudbus.cloudsim.schedulers.vm.{VmSchedulerAbstract, VmSchedulerSpaceShared, VmSchedulerTimeShared}
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelDynamic
 import org.cloudbus.cloudsim.vms.{Vm, VmCost, VmSimple}
-import org.cloudsimplus.builders.tables.{CloudletsTableBuilder, TextTableColumn}
+import org.cloudsimplus.builders.tables.CloudletsTableBuilder
 
-import java.text.DecimalFormat
 import collection.JavaConverters.*
 import scala.collection.mutable.ListBuffer
 import java.util
 
-class SimulationOne {
+class SimulationThree {
   /*
   Fetch configs from resources and setup logger
   */
-//  val config = fetchConfig()
   val customer_config = ConfigFactory.load("cloud-customer")
   val provider_config = ConfigFactory.load("cloud-provider")
   val logger = CreateLogger(classOf[SimulationOne])
 
-  // Fetch Provider Configs for IaaS, SaaS and PaaS
-  // Fetch Provider Configs for IaaS, SaaS and PaaS
-  // Create 3 Datacenters
-
   // Hosts Config
-  val HOSTS: Int = provider_config.getInt(("IaaS.host.count"))
-  val HOSTS_RAM: Int = provider_config.getInt("IaaS.host.RAMInMBs")
-  val HOSTS_BANDWIDTH: Long = provider_config.getLong("IaaS.host.BandwidthInMBps")
-  val HOSTS_STORAGE: Long = provider_config.getLong("IaaS.host.StorageInMBs")
-  val HOSTS_PES: Int = provider_config.getInt("IaaS.host.PEs")
-  val HOSTS_MIPS_CAPACITY: Double = provider_config.getDouble("IaaS.host.mipsCapacity")
+  val HOSTS: Int = provider_config.getInt(("FaaS.host.count"))
+  val HOSTS_RAM: Int = provider_config.getInt("FaaS.host.RAMInMBs")
+  val HOSTS_BANDWIDTH: Long = provider_config.getLong("FaaS.host.BandwidthInMBps")
+  val HOSTS_STORAGE: Long = provider_config.getLong("FaaS.host.StorageInMBs")
+  val HOSTS_PES: Int = provider_config.getInt("FaaS.host.PEs")
+  val HOSTS_MIPS_CAPACITY: Double = provider_config.getDouble("FaaS.host.mipsCapacity")
 
   // VMs Config
-  val VMS: Int = customer_config.getInt("IaaS.vm.count")
-  val VMS_MIPS_CAPACITY: Double = customer_config.getDouble("IaaS.vm.mipsCapacity")
-  val VMS_PES: Int = customer_config.getInt("IaaS.vm.PEs")
-  val VMS_RAM: Long = customer_config.getLong("IaaS.vm.RAMInMBs")
-  val VMS_BANDWIDTH: Long = customer_config.getLong("IaaS.vm.BandwidthInMBps")
-  val VMS_STORAGE: Long = customer_config.getLong("IaaS.vm.StorageInMBs")
-  val VM_ALLOCATION_POLICY: String = provider_config.getString("IaaS.VmAllocationPolicy")
-  val VM_SCHEDULER_POLICY: String = customer_config.getString("IaaS.vm.scheduler")
+  val VMS: Int = provider_config.getInt("FaaS.vm.count")
+  val VMS_MIPS_CAPACITY: Double = provider_config.getDouble("FaaS.vm.mipsCapacity")
+  val VMS_PES: Int = provider_config.getInt("FaaS.vm.PEs")
+  val VMS_RAM: Long = provider_config.getLong("FaaS.vm.RAMInMBs")
+  val VMS_BANDWIDTH: Long = provider_config.getLong("FaaS.vm.BandwidthInMBps")
+  val VMS_STORAGE: Long = provider_config.getLong("FaaS.vm.StorageInMBs")
+  val VM_ALLOCATION_POLICY: String = provider_config.getString("FaaS.VmAllocationPolicy")
+  val VM_SCHEDULER_POLICY: String = provider_config.getString("FaaS.vm.scheduler")
 
   // Cloudlets Configs
-  val CLOUDLETS: Int = customer_config.getInt("IaaS.cloudlet.count")
-  val CLOUDLETS_LENGTH: Long = customer_config.getLong("IaaS.cloudlet.length")
-  val CLOUDLETS_PES: Int = customer_config.getInt("IaaS.cloudlet.PEs")
-  val CLOUDLETS_SIZE: Long = customer_config.getLong("IaaS.cloudlet.size")
-  val CLOUDLETS_SCHEDULER_POLICY: String = customer_config.getString("IaaS.cloudlet.scheduler")
+  val CLOUDLETS: Int = customer_config.getInt("FaaS.cloudlet.count")
+  val CLOUDLETS_LENGTH: Long = customer_config.getLong("FaaS.cloudlet.length")
+  val CLOUDLETS_PES: Int = customer_config.getInt("FaaS.cloudlet.PEs")
+  val CLOUDLETS_SIZE: Long = customer_config.getLong("FaaS.cloudlet.size")
+  val CLOUDLETS_SCHEDULER_POLICY: String = provider_config.getString("FaaS.cloudlet.scheduler")
 
-  val UTILIZATION_RATIO: Double = customer_config.getDouble("IaaS.utilizationRatio")
+  val UTILIZATION_RATIO: Double = provider_config.getDouble("FaaS.utilizationRatio")
 
   // COSTING
-  val COST_PER_SECOND: Double = provider_config.getDouble("IaaS.CostPerSecond")
-  val COST_PER_MEM: Double = provider_config.getDouble("IaaS.CostPerMem")
-  val COST_PER_STORAGE: Double = provider_config.getDouble("IaaS.CostPerStorage")
-  val COST_PER_BW: Double = provider_config.getDouble("IaaS.CostPerBW")
+  val COST_PER_SECOND: Double = provider_config.getDouble("FaaS.CostPerSecond")
+  val COST_PER_MEM: Double = provider_config.getDouble("FaaS.CostPerMem")
+  val COST_PER_STORAGE: Double = provider_config.getDouble("FaaS.CostPerStorage")
+  val COST_PER_BW: Double = provider_config.getDouble("FaaS.CostPerBW")
 
   // Network Latency
-  val NETWORK_BW: Double = provider_config.getDouble("IaaS.NetworkBW")
-  val NETWORK_LATENCY: Double = provider_config.getDouble("IaaS.NetworkLatency")
+  val NETWORK_BW: Double = provider_config.getDouble("FaaS.NetworkBW")
+  val NETWORK_LATENCY: Double = provider_config.getDouble("FaaS.NetworkLatency")
 
   // Create a simulation and hostlist and display the hostlist on logs
   val simulation = new CloudSim
@@ -105,7 +100,7 @@ class SimulationOne {
   simulation.start();
 
   // Print the output of the simulation
-  new CloudletsTableBuilder(broker0.getCloudletFinishedList).setTitle("IaaS").build()
+  new CloudletsTableBuilder(broker0.getCloudletFinishedList).setTitle("FaaS").build()
 
   // Print the costs of each VM and Cloudlets and also store the total cost for test case check
   val TotalCost: Double = CalculateAndPrintCost
@@ -136,7 +131,7 @@ class SimulationOne {
       .setRam(VMS_RAM)
       .setBw(VMS_BANDWIDTH)
       .setSize(VMS_STORAGE)
-    .setCloudletScheduler(fetchCloudletSchedulerPolicy)
+      .setCloudletScheduler(fetchCloudletSchedulerPolicy)
     ))
     vmlist
   }
@@ -179,14 +174,6 @@ class SimulationOne {
       case "TimeShared" => new CloudletSchedulerTimeShared
       case "SpaceShared" => new CloudletSchedulerSpaceShared
       case _ => new CloudletSchedulerTimeShared
-    }
-  }
-
-  // fetches the config from the config file
-  def fetchConfig() = {
-    ObtainConfigReference("SimulationOne") match {
-      case Some(value) => value
-      case None => throw new RuntimeException("Cannot obtain a reference to the config data")
     }
   }
 
@@ -256,10 +243,9 @@ class SimulationOne {
   }
 }
 
-
-object SimulationOne {
+object SimulationThree {
 
   def main(args: Array[String]): Unit = {
-    new SimulationOne
+    new SimulationThree
   }
 }
