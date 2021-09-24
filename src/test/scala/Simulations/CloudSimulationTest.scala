@@ -41,6 +41,9 @@ class CloudSimulationTest {
   }
 
   // @Test
-  // Check cost is not <= 0
+  @Test
+  def testCost = {
+    assertTrue(cloudSimulator.TotalCost > 0)
+  }
 
 }

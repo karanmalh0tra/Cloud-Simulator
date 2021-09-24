@@ -55,14 +55,14 @@ class SimulationOne {
   val UTILIZATION_RATIO: Double = config.getDouble("SimulationOne.utilizationRatio")
 
   // COSTING
-  val COST_PER_SECOND: Double = 0.01
-  val COST_PER_MEM: Double = 0.02
-  val COST_PER_STORAGE: Double = 0.001
-  val COST_PER_BW: Double = 0.005
+  val COST_PER_SECOND: Double = config.getDouble("SimulationOne.CostPerSecond")
+  val COST_PER_MEM: Double = config.getDouble("SimulationOne.CostPerMem")
+  val COST_PER_STORAGE: Double = config.getDouble("SimulationOne.CostPerStorage")
+  val COST_PER_BW: Double = config.getDouble("SimulationOne.CostPerBW")
 
   // Done: Network Latency
-  val NETWORK_BW: Double = 5.0
-  val NETWORK_LATENCY: Double = 5.0
+  val NETWORK_BW: Double = config.getDouble("SimulationOne.NetworkBW")
+  val NETWORK_LATENCY: Double = config.getDouble("SimulationOne.NetworkLatency")
 
   val simulation = new CloudSim
   val hostList = createHostList(HOSTS)
@@ -92,7 +92,7 @@ class SimulationOne {
   logger.info("Starting cloud simulation...")
   simulation.start();
 
-  printOutput
+  val TotalCost: Double = printOutput
 
   def configureNetwork() = {
     val networkTopology = new BriteNetworkTopology()
@@ -170,7 +170,7 @@ class SimulationOne {
     pesList
   }
 
-  def printOutput: Unit = {
+  def printOutput: Double = {
     logger.info(s"-------------------------------------------")
     // vars are confined to method scopes and are used to keep adding cost while iterating through the Vms
     var VmProcessingCost: Double = 0.0
@@ -216,6 +216,9 @@ class SimulationOne {
       s"Cost and " + "$" + s"$VmBwCost Bandwidth Cost")
     logger.info(s"Total cost " + "$" + s"$CloudletTotalCost for ${broker0.getCloudletFinishedList.size()} Cloudlets which includes " + "$" + s"$CloudletProcessingCost Processing Cost, " + "$" + s"$CloudletMemoryCost Memory Cost, " + "$" + s"$CloudletStorageCost Storage" +
       s"Cost and " + "$" + s"$CloudletBwCost Bandwidth Cost")
+    val TotalCost = VmTotalCost + CloudletTotalCost
+    logger.info(s"The total cost is $TotalCost")
+    TotalCost
 
   }
 }
