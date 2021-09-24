@@ -13,9 +13,10 @@ import org.cloudbus.cloudsim.resources.{Pe, PeSimple}
 import org.cloudbus.cloudsim.schedulers.cloudlet.{CloudletSchedulerAbstract, CloudletSchedulerCompletelyFair, CloudletSchedulerSpaceShared, CloudletSchedulerTimeShared}
 import org.cloudbus.cloudsim.schedulers.vm.{VmSchedulerAbstract, VmSchedulerSpaceShared, VmSchedulerTimeShared}
 import org.cloudbus.cloudsim.utilizationmodels.UtilizationModelDynamic
-import org.cloudbus.cloudsim.vms.{Vm, VmSimple}
-import org.cloudsimplus.builders.tables.CloudletsTableBuilder
+import org.cloudbus.cloudsim.vms.{Vm, VmCost, VmSimple}
+import org.cloudsimplus.builders.tables.{CloudletsTableBuilder, TextTableColumn}
 
+import java.text.DecimalFormat
 import collection.JavaConverters.*
 import scala.collection.mutable.ListBuffer
 import java.util
@@ -53,7 +54,11 @@ class SimulationOne {
 
   val UTILIZATION_RATIO: Double = config.getDouble("SimulationOne.utilizationRatio")
 
-  // ToDo: Costing inputs
+  // COSTING
+  val COST_PER_SECOND: Double = 0.01
+  val COST_PER_MEM: Double = 0.02
+  val COST_PER_STORAGE: Double = 0.001
+  val COST_PER_BW: Double = 0.005
 
   // Done: Network Latency
   val NETWORK_BW: Double = 5.0
@@ -64,6 +69,11 @@ class SimulationOne {
   logger.info(s"Created hosts: $hostList")
 
   val datacenter0 = new DatacenterSimple(simulation, hostList, fetchVmAllocationPolicy);
+  datacenter0.getCharacteristics
+    .setCostPerSecond(COST_PER_SECOND)
+    .setCostPerMem(COST_PER_MEM)
+    .setCostPerStorage(COST_PER_STORAGE)
+    .setCostPerBw(COST_PER_BW)
   val broker0 = new DatacenterBrokerSimple(simulation);
 
   configureNetwork()
@@ -82,8 +92,7 @@ class SimulationOne {
   logger.info("Starting cloud simulation...")
   simulation.start();
 
-  val finishedCloudlets = broker0.getCloudletFinishedList();
-  new CloudletsTableBuilder(finishedCloudlets).build();
+  printOutput
 
   def configureNetwork() = {
     val networkTopology = new BriteNetworkTopology()
@@ -160,7 +169,57 @@ class SimulationOne {
     (1 to HOSTS_PES).map(_ => pesList.add(new PeSimple(HOSTS_MIPS_CAPACITY)))
     pesList
   }
+
+  def printOutput: Unit = {
+    logger.info(s"-------------------------------------------")
+    // vars are confined to method scopes and are used to keep adding cost while iterating through the Vms
+    var VmProcessingCost: Double = 0.0
+    var VmMemoryCost: Double = 0.0
+    var VmStorageCost: Double = 0.0
+    var VmBwCost: Double = 0.0
+    var VmTotalCost: Double = 0.0
+
+    val CloudletFinishedList = broker0.getCloudletFinishedList
+    var CloudletProcessingCost: Double = 0.0
+    var CloudletMemoryCost: Double = 0.0
+    var CloudletStorageCost: Double = 0.0
+    var CloudletBwCost: Double = 0.0
+    var CloudletTotalCost: Double = 0.0
+    broker0.getVmCreatedList.forEach {
+      Vm => {
+        val cost = new VmCost(Vm)
+        VmProcessingCost += cost.getProcessingCost
+        VmMemoryCost += cost.getMemoryCost
+        VmStorageCost += cost.getStorageCost
+        VmBwCost += cost.getBwCost
+        VmTotalCost += VmProcessingCost + VmMemoryCost + VmStorageCost + VmBwCost
+        logger.info(s"$Vm's costs ${cost.getProcessingCost} to process, ${cost.getMemoryCost} memory cost, ${cost.getStorageCost} storage cost and ${cost.getBwCost} bandwidth cost")
+      }
+    }
+
+    broker0.getCloudletFinishedList.forEach {
+      (cloudlet: Cloudlet) => {
+        CloudletProcessingCost += (cloudlet.getActualCpuTime*cloudlet.getCostPerSec)
+        CloudletMemoryCost += (cloudlet.getFileSize*cloudlet.getCostPerSec*COST_PER_MEM)
+        CloudletStorageCost += (cloudlet.getActualCpuTime*cloudlet.getFileSize*COST_PER_STORAGE)
+        CloudletBwCost += (cloudlet.getActualCpuTime*cloudlet.getCostPerBw)
+        CloudletTotalCost += CloudletProcessingCost + CloudletMemoryCost + CloudletStorageCost + CloudletBwCost
+        logger.info(s"$cloudlet's processing cost is ${cloudlet.getActualCpuTime*cloudlet.getCostPerSec}" +
+          s" memory cost is ${cloudlet.getFileSize*cloudlet.getCostPerSec*COST_PER_MEM}" +
+          s" storage cost is ${cloudlet.getActualCpuTime*cloudlet.getFileSize*COST_PER_STORAGE}" +
+          s" bw cost is ${cloudlet.getActualCpuTime*cloudlet.getCostPerBw}")
+      }
+    }
+
+    new CloudletsTableBuilder(broker0.getCloudletFinishedList).setTitle("IaaS").build()
+    logger.info(s"Total cost " + "$" + s"$VmTotalCost for ${broker0.getVmsNumber} VMs which includes " + "$" + s"$VmProcessingCost Processing Cost, " + "$" + s"$VmMemoryCost Memory Cost, " + "$" + s"$VmStorageCost Storage" +
+      s"Cost and " + "$" + s"$VmBwCost Bandwidth Cost")
+    logger.info(s"Total cost " + "$" + s"$CloudletTotalCost for ${broker0.getCloudletFinishedList.size()} Cloudlets which includes " + "$" + s"$CloudletProcessingCost Processing Cost, " + "$" + s"$CloudletMemoryCost Memory Cost, " + "$" + s"$CloudletStorageCost Storage" +
+      s"Cost and " + "$" + s"$CloudletBwCost Bandwidth Cost")
+
+  }
 }
+
 
 object SimulationOne {
 
