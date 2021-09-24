@@ -26,3 +26,11 @@ sbt clean compile test
 ```
 sbt run
 ```
+
+### Test Cases
+1. `testCheckConfig` tests if the configs are loaded or whether they're null.
+2. `testHostCount` tests if the number of hosts created are equal to the number of hosts specified in the config.
+3. Similar tests are done for `testVmCount` and `testCloudletsCount`.
+4. `testHostAndVMConfig` tests if the resources of the hosts are sufficient to allocate the VMs.
+5. `testCost` checks whether the total costs of simulation through either Service is > 0.
+
