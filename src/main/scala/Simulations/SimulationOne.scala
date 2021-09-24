@@ -30,6 +30,11 @@ class SimulationOne {
   val provider_config = ConfigFactory.load("cloud-provider")
   val logger = CreateLogger(classOf[SimulationOne])
 
+  // Fetch Provider Configs for IaaS, SaaS and PaaS
+  // Fetch Provider Configs for IaaS, SaaS and PaaS
+  // Create 3 Datacenters
+
+  // Hosts Config
   val HOSTS: Int = config.getInt(("SimulationOne.host.count"))
   val HOSTS_RAM: Int = config.getInt("SimulationOne.host.RAMInMBs")
   val HOSTS_BANDWIDTH: Long = config.getLong("SimulationOne.host.BandwidthInMBps")
@@ -37,6 +42,7 @@ class SimulationOne {
   val HOSTS_PES: Int = config.getInt("SimulationOne.host.PEs")
   val HOSTS_MIPS_CAPACITY: Double = config.getDouble("SimulationOne.host.mipsCapacity")
 
+  // VMs Config
   val VMS: Int = config.getInt("SimulationOne.vm.count")
   val VMS_MIPS_CAPACITY: Double = config.getDouble("SimulationOne.vm.mipsCapacity")
   val VMS_PES: Int = config.getInt("SimulationOne.vm.PEs")
@@ -46,6 +52,7 @@ class SimulationOne {
   val VM_ALLOCATION_POLICY: String = config.getString("SimulationOne.VmAllocationPolicy")
   val VM_SCHEDULER_POLICY: String = config.getString("SimulationOne.vm.scheduler")
 
+  // Cloudlets Configs
   val CLOUDLETS: Int = config.getInt("SimulationOne.cloudlet.count")
   val CLOUDLETS_LENGTH: Long = config.getLong("SimulationOne.cloudlet.length")
   val CLOUDLETS_PES: Int = config.getInt("SimulationOne.cloudlet.PEs")
@@ -60,14 +67,16 @@ class SimulationOne {
   val COST_PER_STORAGE: Double = config.getDouble("SimulationOne.CostPerStorage")
   val COST_PER_BW: Double = config.getDouble("SimulationOne.CostPerBW")
 
-  // Done: Network Latency
+  // Network Latency
   val NETWORK_BW: Double = config.getDouble("SimulationOne.NetworkBW")
   val NETWORK_LATENCY: Double = config.getDouble("SimulationOne.NetworkLatency")
 
+  // Create a simulation and hostlist and display the hostlist on logs
   val simulation = new CloudSim
   val hostList = createHostList(HOSTS)
   logger.info(s"Created hosts: $hostList")
 
+  // Create a datacenter and assign costing
   val datacenter0 = new DatacenterSimple(simulation, hostList, fetchVmAllocationPolicy);
   datacenter0.getCharacteristics
     .setCostPerSecond(COST_PER_SECOND)
@@ -76,23 +85,30 @@ class SimulationOne {
     .setCostPerBw(COST_PER_BW)
   val broker0 = new DatacenterBrokerSimple(simulation);
 
+  // configure the network
   configureNetwork()
 
+  // Create the list of VMs and print them on logs
   val vmList = createVmList(VMS)
-
   logger.info(s"Create virtual machine: $vmList")
 
+  // Create the list of cloudlets and print them on logs
   val cloudletList = createCloudlet(CLOUDLETS)
-
   logger.info(s"Create a list of cloudlets: $cloudletList")
 
+  // Submit the list of VMs and Cloudlets to the broker
   broker0.submitVmList(vmList);
   broker0.submitCloudletList(cloudletList);
 
+  // Start the simulation
   logger.info("Starting cloud simulation...")
   simulation.start();
 
-  val TotalCost: Double = printOutput
+  // Print the output of the simulation
+  new CloudletsTableBuilder(broker0.getCloudletFinishedList).setTitle("IaaS").build()
+
+  // Print the costs of each VM and Cloudlets and also store the total cost for test case check
+  val TotalCost: Double = CalculateAndPrintCost
 
   def configureNetwork() = {
     val networkTopology = new BriteNetworkTopology()
@@ -100,6 +116,8 @@ class SimulationOne {
     networkTopology.addLink(datacenter0,broker0,NETWORK_BW,NETWORK_LATENCY)
   }
 
+  // Create the list of hosts and assigns the configs as well as a VM Scheduler Policy.
+  // Return the list of hosts
   def createHostList(HOSTS: Int) = {
     val hostlist = new util.ArrayList[Host]
     (1 to HOSTS).map(hostPesList => hostlist.add(new HostSimple(HOSTS_RAM,
@@ -110,6 +128,8 @@ class SimulationOne {
     hostlist
   }
 
+  // Creates the list of VMs and assigns the VM configs as well as sets the Cloudlets Scheduler Policy.
+  // Returns the list of VMs
   def createVmList(VmCount: Int) = {
     val vmlist = new util.ArrayList[Vm]
     (1 to VmCount).map(_ => vmlist.add(new VmSimple(VMS_MIPS_CAPACITY, VMS_PES)
@@ -121,6 +141,7 @@ class SimulationOne {
     vmlist
   }
 
+  // Based on the configs, sets the VM Allocation Policy
   def fetchVmAllocationPolicy: VmAllocationPolicyAbstract = {
     VM_ALLOCATION_POLICY match {
       case "BestFit" => new VmAllocationPolicyBestFit
@@ -130,6 +151,7 @@ class SimulationOne {
     }
   }
 
+  // Based on the configs, sets the VM Scheduler Policy
   def fetchVmSchedulerPolicy: VmSchedulerAbstract = {
     VM_SCHEDULER_POLICY match {
       case "TimeShared" => new VmSchedulerTimeShared
@@ -138,6 +160,8 @@ class SimulationOne {
     }
   }
 
+  // Creates the list of cloudlets and assigns configs to them.
+  // Returns the cloudlets list
   def createCloudlet(CLOUDLETS: Int) = {
     val utilizationModel = new UtilizationModelDynamic(UTILIZATION_RATIO)
     val cloudlets = new util.ArrayList[Cloudlet]
@@ -148,6 +172,7 @@ class SimulationOne {
     cloudlets
   }
 
+  // Based on the configs entered, sets the Cloudlet Scheduler Policy
   def fetchCloudletSchedulerPolicy: CloudletSchedulerAbstract = {
     CLOUDLETS_SCHEDULER_POLICY match {
       case "CompletelyFair" => new CloudletSchedulerCompletelyFair
@@ -157,6 +182,7 @@ class SimulationOne {
     }
   }
 
+  // fetches the config from the config file
   def fetchConfig() = {
     ObtainConfigReference("SimulationOne") match {
       case Some(value) => value
@@ -164,13 +190,20 @@ class SimulationOne {
     }
   }
 
+  // Creates a list of PEs to be stored in hosts
+  // Returns the PEs List
   def createHostPesList(HOSTS_PES: Int) = {
     val pesList = new util.ArrayList[Pe]
     (1 to HOSTS_PES).map(_ => pesList.add(new PeSimple(HOSTS_MIPS_CAPACITY)))
     pesList
   }
 
-  def printOutput: Double = {
+  // Calculates the costs of Running the VM
+  // Calculates the costs of Running the Cloudlets
+  // Prints in logs costs of each VM and Cloudlet
+  // Prints different costing like Execution costs, Memory Costs, Storage Costs and Bandwidth Costs
+  // Returns the total costs
+  def CalculateAndPrintCost: Double = {
     logger.info(s"-------------------------------------------")
     // vars are confined to method scopes and are used to keep adding cost while iterating through the Vms
     var VmProcessingCost: Double = 0.0
@@ -179,6 +212,7 @@ class SimulationOne {
     var VmBwCost: Double = 0.0
     var VmTotalCost: Double = 0.0
 
+    // vars are confined to method scopes and are used to keep adding cost while iterating through the Cloudlets
     val CloudletFinishedList = broker0.getCloudletFinishedList
     var CloudletProcessingCost: Double = 0.0
     var CloudletMemoryCost: Double = 0.0
@@ -211,7 +245,6 @@ class SimulationOne {
       }
     }
 
-    new CloudletsTableBuilder(broker0.getCloudletFinishedList).setTitle("IaaS").build()
     logger.info(s"Total cost " + "$" + s"$VmTotalCost for ${broker0.getVmsNumber} VMs which includes " + "$" + s"$VmProcessingCost Processing Cost, " + "$" + s"$VmMemoryCost Memory Cost, " + "$" + s"$VmStorageCost Storage" +
       s"Cost and " + "$" + s"$VmBwCost Bandwidth Cost")
     logger.info(s"Total cost " + "$" + s"$CloudletTotalCost for ${broker0.getCloudletFinishedList.size()} Cloudlets which includes " + "$" + s"$CloudletProcessingCost Processing Cost, " + "$" + s"$CloudletMemoryCost Memory Cost, " + "$" + s"$CloudletStorageCost Storage" +
