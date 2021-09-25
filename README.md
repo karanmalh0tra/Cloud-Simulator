@@ -49,6 +49,7 @@ The following Assumptions are made to divide the access control between the Prov
 4. SaaS: The Provider has control over the hardware, the VMs, and the cloudlets specifications. The customer has access to the number of Cloudlets (number of instances of the SaaS software being used).
 A network layer has been created and Network Bandwidth and Network Latency was specified to simulate the real-world scenario where allocations and scheduling takes time due to constraints in bandwidth and latency. Without specifying these, the cloudlets get scheduled readily which isn’t what 
 really happens when we use real world Cloud Platforms.
+
 ### Costing based on Service Model
 The customer is charged for the following:
 1. Cost per second of use
@@ -64,6 +65,7 @@ To charge the consumers for cloud usage, the following assumptions were made to 
 4.	SaaS: The customers are charged per cloudlet since the services are offered by the Cloud Provider and the customers merely use the application. This can also be free-to-use but assuming a Provider is only a SaaS provider, the providers only stream of revenue would be the utilization of Cloudlets by the consumer.
 
 The logs print the total cost incurred by the customer so the providers can analyze this and judge if they’re profiting or making a loss by providing the different service models to the consumers.
+
 ### Allocation and Scheduling Policies Implemented
 Various Allocation and Scheduling Policies are compared for VM and Cloudlets.
 Changing configurations accommodates to changing policies in code.
@@ -74,3 +76,25 @@ The different VmAllocationPolicies covered are:
 4.	Simple (Default)
 
 TimeShared and SpaceShared scheduling policies were covered for VMs and Cloudlets.
+
+### Results
+IaaS using RoundRobin VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling.
+![IaaS using RoundRobin VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling](https://github.com/karanmalh0tra/Cloud-Simulator/blob/main/images/IaaS-1.png "IaaS using RoundRobin VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling.")
+
+IaaS using BestFit VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling
+![IaaS using BestFit VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling](https://github.com/karanmalh0tra/Cloud-Simulator/blob/main/images/IaaS-2.png "IaaS using BestFit VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling")
+
+PaaS using WorstFit VmAllocationPolicy, TimeShared Vm and SpaceShared Cloudlet Scheduling
+![PaaS using WorstFit VmAllocationPolicy, TimeShared Vm and SpaceShared Cloudlet Scheduling](https://github.com/karanmalh0tra/Cloud-Simulator/blob/main/images/PaaS-1.png "PaaS using WorstFit VmAllocationPolicy, TimeShared Vm and SpaceShared Cloudlet Scheduling")
+
+PaaS using Simple VmAllocationPolicy, TimeShared Vm and SpaceShared Cloudlet Scheduling
+![PaaS using Simple VmAllocationPolicy, TimeShared Vm and SpaceShared Cloudlet Scheduling](https://github.com/karanmalh0tra/Cloud-Simulator/blob/main/images/PaaS-2.png "PaaS using Simple VmAllocationPolicy, TimeShared Vm and SpaceShared Cloudlet Scheduling")
+
+FaaS using WorstFit VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling
+![FaaS using WorstFit VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling](https://github.com/karanmalh0tra/Cloud-Simulator/blob/main/images/FaaS-1.png "FaaS using WorstFit VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling")
+
+SaaS using RoundRobin VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling and Cloudlet Count = 16
+![SaaS using RoundRobin VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling and Cloudlet Count = 16](https://github.com/karanmalh0tra/Cloud-Simulator/blob/main/images/SaaS-1.png "SaaS using RoundRobin VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling and Cloudlet Count = 16")
+
+SaaS using RoundRobin VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling and Cloudlet Count = 32
+![SaaS using RoundRobin VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling and Cloudlet Count = 32](https://github.com/karanmalh0tra/Cloud-Simulator/blob/main/images/SaaS-2.PNG "SaaS using RoundRobin VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling and Cloudlet Count = 32")
