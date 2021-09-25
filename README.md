@@ -26,6 +26,7 @@ sbt clean compile test
 ```
 sbt run
 ```
++ Enter the number given to the runSimulation option to run all the Simulations.
 
 ### Test Cases
 1. `testCheckConfig` tests if the configs are loaded or whether they're null.
@@ -84,7 +85,7 @@ IaaS using RoundRobin VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling.
 IaaS using BestFit VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling
 ![IaaS using BestFit VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling](https://github.com/karanmalh0tra/Cloud-Simulator/blob/main/images/IaaS-2.png "IaaS using BestFit VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling")
 
-PaaS using WorstFit VmAllocationPolicy, TimeShared Vm and SpaceShared Cloudlet Scheduling
+PaaS using WorstFit VmAllocationPolicy, TimeShared Vm and TimeShared Cloudlet Scheduling
 ![PaaS using WorstFit VmAllocationPolicy, TimeShared Vm and SpaceShared Cloudlet Scheduling](https://github.com/karanmalh0tra/Cloud-Simulator/blob/main/images/PaaS-1.png "PaaS using WorstFit VmAllocationPolicy, TimeShared Vm and SpaceShared Cloudlet Scheduling")
 
 PaaS using Simple VmAllocationPolicy, TimeShared Vm and SpaceShared Cloudlet Scheduling
@@ -98,3 +99,10 @@ SaaS using RoundRobin VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling 
 
 SaaS using RoundRobin VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling and Cloudlet Count = 32
 ![SaaS using RoundRobin VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling and Cloudlet Count = 32](https://github.com/karanmalh0tra/Cloud-Simulator/blob/main/images/SaaS-2.PNG "SaaS using RoundRobin VmAllocationPolicy, TimeShared Vm and Cloudlet Scheduling and Cloudlet Count = 32")
+
+### Observations
+- Looking at the two IaaS executions, we could see that having RoundRobin VmAllocationPolicy ensures that the VM's are allocated equally to all the hosts. The BestFit Allocation Policy doesn't utilise two out of the four hosts for the given set of configuration. We can probably say that the RoundRobin Allocation would help in distributing workloads equally and dividing between multiple hosts could help with disaster recovery.
+- Comparing the two PaaS executions, the difference being the Cloudlets scheduling policy, the cost incurred between the two is almost 2x due to the Cloudlets taking twice the time to execute.
+- The FaaS charges the customer for the execution of Cloudlets and a fixed amount for using their services.
+- In SaaS, we could see that as the number of Cloudlets increased, the total amount charged increased as well as with the same set of resources for Vm And Host, the Cloudlets took more time to execute.
+- There is a delay in the executions of cloudlets in all the analysis. This is due to the existance of a Network Latency.
